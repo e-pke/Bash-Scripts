@@ -2,10 +2,11 @@
 Repositório de Scripts em Bash.
 
 ## Como executar:
-  1. Baixe os arquivos;
-  2. Dê permissão de execução ao script menu;
+  1. Baixe os arquivos
+     `git clone https://github.com/e-pke/Bash-Scripts`
+  2. Dê permissão de execução ao script menu
      `chmod +x menu.sh`
-  3. Execute o script.
+  3. Execute o script
      `./menu.sh`
 
 ## Síntese dos Scripts:
