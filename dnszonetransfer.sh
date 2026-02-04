@@ -1,44 +1,73 @@
 #!/bin/bash
 # https://github.com/e-pke/Bash-Scripts
 
-echo -e "\n\033[1;39m"
-clear
-cat << EOF
-  ┌────────────────────────────────┐
-  │       DNS ZONE TRANSFER        │
-  └────────────────────────────────┘
+# Estilos
+BLD="\033[1m"
+RST="\033[0m"
 
-       ▄▄▄▄▄▄       ▄▄▄▄      by 
-      ██▀▀▀▀▀█       ██          
-      ██▄▄▄▄ ▀ ██▀█▄ ██ ▄█▀▄█▀█▄ 
-      ██▀▀▀▀ ▄ ██ ██ ████  ██▄█▀ 
-      ▀██████▀ ██▄█▀▄██ ▀█▄▀█▄▄■ 
-     ▄▄▄▄▄▄▄▄▄ ██ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-               ▀▀                
+# Cores
+RED="\033[31m"
+BLU="\033[36m"
+STD="\033[39m"
+
+# Função que limpa arquivos temporários
+temporario() {
+	rm NAMESERVER 2>/dev/null
+}
+
+# Função para encerrar o script mesmo com Ctrl+C
+encerrar() {
+	echo -e "\n\n${BLD}${RED}   ▶▶▶ ENCERRADO ${BLD}${BLU}"
+}
+trap encerrar exit
+
+# Função cabeçalho
+header() {
+	echo -e "\n${BLD}${STD}"
+	cat <<- EOF
+	  ┌────────────────────────────────┐
+	  │       DNS ZONE TRANSFER        │
+	  └────────────────────────────────┘
+	
+	       ▄▄▄▄▄▄       ▄▄▄▄      by 
+	      ██▀▀▀▀▀█       ██          
+	      ██▄▄▄▄ ▀ ██▀█▄ ██ ▄█▀▄█▀█▄ 
+	      ██▀▀▀▀ ▄ ██ ██ ████  ██▄█▀ 
+	      ▀██████▀ ██▄█▀▄██ ▀█▄▀█▄▄■ 
+	     ▄▄▄▄▄▄▄▄▄ ██ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+	               ▀▀                
 EOF
-echo -e "\033[1;36m\n"
+}
 
-read -p "   ▶▶▶ DIGITE O ALVO:  " ALVO
+# Script dentro de uma função
+script() {
+	echo -e "${BLD}${BLU}"
+	temporario
 
-echo -e "\n\033[1;39m   ▶▶▶ BUSCANDO REGISTROS DO TIPO NAME SERVER \033[0m\n"
-host -t ns "$ALVO" | cut -d " " -f4 | sed 's/.$//' >> NAMESERVER
-cat NAMESERVER
+	read -p "   ▶▶▶ DIGITE O ALVO:  " ALVO
 
-echo -e "\n\033[1;39m   ▶▶▶ REALIZANDO DNS ZONE TRANSFER \033[0m\n"
-for DNS in $(cat NAMESERVER)
-do
-echo -e "      ▶▶▶ TESTANDO:  $DNS"
-(host -l -a $ALVO $DNS ; echo "" ) | tee -a dzt_$ALVO
-done
+	echo -e "\n${BLD}${STD}   ▶▶▶ BUSCANDO REGISTROS DO TIPO NAME SERVER ${RST}\n"
+	host -t ns "$ALVO" | cut -d " " -f4 | sed 's/.$//' >> NAMESERVER
+	cat NAMESERVER
 
-echo -e "\033[1;36m   ▶▶▶ PRONTO \033[0m\n"
-echo -e "\033[1;39m      ▶▶▶ RESULTADO SALVO EM:  \033[0mdzt_$ALVO\033[1;36m\n"
-rm NAMESERVER
+	echo -e "\n${BLD}${STD}   ▶▶▶ REALIZANDO DNS ZONE TRANSFER ${RST}\n"
+	for DNS in $(cat NAMESERVER); do
+		echo -e "      ▶▶▶ TESTANDO:  $DNS"
+		(host -l -a $ALVO $DNS ; echo "" ) | tee -a dzt_$ALVO
+	done
 
-read -p "   ▶▶▶ EXECUTAR NOVAMENTE? [y/N]  " RESPOSTA
-if [ "$RESPOSTA" != "y" ]
-then
-	echo -e "\n\033[1;31m   ▶▶▶ ENCERRADO \033[1;36m\n"
-else
-	./$0
-fi
+	echo -e "${BLD}${BLU}   ▶▶▶ PRONTO ${RST}\n"
+	echo -e "${BLD}${STD}      ▶▶▶ RESULTADO SALVO EM:  ${RST}dzt_$ALVO${BLD}${BLU}\n"
+
+	temporario
+
+	read -p "   ▶▶▶ EXECUTAR NOVAMENTE? [y/N]  " RESPOSTA
+	if [[ "$RESPOSTA" != "y" ]]; then
+		exit 0
+	else
+		script
+	fi
+}
+
+header
+script
